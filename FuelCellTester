@@ -1,0 +1,85 @@
+/*
+Fuel Cell Test-- code for reading current and voltage
+*/
+#include <SD.h>
+#include <File.h> 
+#include <math.h>
+
+Sd2Card card;
+const int chipSelect = 10; //CS pin
+File dataFile;
+double voltage;
+unsigned int ADCValue;
+long vcc;
+double current;
+
+void setup() {
+  Serial.begin (9600);
+  initializeSDCard();  
+}
+
+void loop() {
+    voltage = getVoltage ();
+    current = getCurrent ();
+    dataFile = SD.open ("datalog.txt", FILE_WRITE); 
+    
+    if (dataFile){
+      dataFile.print ("Voltage= ");
+      dataFile.println (voltage);
+      dataFile.print ("Current= ");
+      dataFile.println (current);
+      dataFile.close();
+      Serial.print ("Voltage= ");
+      Serial.println (voltage);
+      Serial.print ("Current= ");
+      Serial.println (current);
+  }
+    else{
+      Serial.println ("error opening datalog.txt");
+  }
+  delay (1000);
+}
+
+double getVoltage (){
+  double r2; //input resistor value 
+  double r1; //input resistor value
+  vcc = readVcc()/1000.0;
+  ADCValue = analogRead (0);
+  voltage = ((ADCValue/1023.0)*(r2/(r1+r2))*vcc);
+  return voltage;  
+}
+
+double getCurrent (){
+  double V; //input voltage
+  double r = .1; //??
+  double x2=analogRead (2); 
+  double x1=analogRead (1); 
+  current = ((x2-x1)/1023)/r;
+  return current;
+}
+
+long readVcc() {
+  long result;
+  // Read 1.1V reference against AVcc
+  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Convert
+  while (bit_is_set(ADCSRA,ADSC));
+  result = ADCL;
+  result |= ADCH<<8;
+  result = 1125300L / result; // Back-calculate AVcc in mV
+  return result;
+}
+
+void initializeSDCard ()
+//initializes SD card
+{
+  Serial.print ("Initializing SD card...");
+  pinMode (10, OUTPUT);
+   if (!SD.begin(chipSelect)) {
+    Serial.println("Card failed, or not present");
+    // don't do anything more:
+    return;
+  }
+  Serial.println("card initialized.");
+}
