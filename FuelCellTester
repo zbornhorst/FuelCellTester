@@ -3,19 +3,22 @@ Fuel Cell Test-- code for reading current and voltage
 */
 #include <SD.h>
 #include <File.h> 
-#include <math.h>
 
-Sd2Card card;
 const int chipSelect = 10; //CS pin
 File dataFile;
 double voltage;
 unsigned int ADCValue;
 long vcc;
 double current;
+double x2;
+double x1;
 
 void setup() {
   Serial.begin (9600);
   initializeSDCard();  
+  dataFile = SD.open ("datalog.txt",FILE_WRITE);
+  dataFile.println ("A0 Reading, Vcc, Voltage, A1 Reading, A2 Reading, Current");
+  dataFile.close();
 }
 
 void loop() {
@@ -23,10 +26,17 @@ void loop() {
     current = getCurrent ();
     dataFile = SD.open ("datalog.txt", FILE_WRITE); 
     
-    if (dataFile){
-      dataFile.print ("Voltage= ");
-      dataFile.println (voltage);
-      dataFile.print ("Current= ");
+    if (dataFile){ 
+      dataFile.print (ADCValue);
+      dataFile.print (", ");
+      dataFile.print (vcc);
+      dataFile.print (", ");
+      dataFile.print (voltage);
+      dataFile.print (", ");
+      dataFile.print (x1);
+      dataFile.print (", ");
+      dataFile.print (x2);
+      dataFile.print (", ");
       dataFile.println (current);
       dataFile.close();
       Serial.print ("Voltage= ");
@@ -52,8 +62,8 @@ double getVoltage (){
 double getCurrent (){
   double V; //input voltage
   double r = .1; //??
-  double x2=analogRead (2); 
-  double x1=analogRead (1); 
+  x2=analogRead (2); 
+  x1=analogRead (1); 
   current = ((x2-x1)/1023)/r;
   return current;
 }
