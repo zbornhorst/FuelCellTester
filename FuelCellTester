@@ -55,7 +55,7 @@ double getVoltage (){
   double r1; //input resistor value
   vcc = readVcc()/1000.0;
   ADCValue = analogRead (0);
-  voltage = ((ADCValue/1023.0)*(r2/(r1+r2))*vcc);
+  voltage = ((ADCValue/1023.0)*((r1+r2)/r2)*vcc);
   return voltage;  
 }
 
