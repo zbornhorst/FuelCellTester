@@ -64,7 +64,7 @@ double getCurrent (){
   double r = .1;
   x1=analogRead (1);
   x2=analogRead (2); 
-  v= (x2-x1)/1023;
+  v= (x2-x1)/1023.0;
   current = v/r;
   return current;
 }
