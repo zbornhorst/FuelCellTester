@@ -28,7 +28,7 @@ void setup() {
   Serial.begin (9600);
   dht.begin();
   initializeSDCard();  
-  dataFile = SD.open ("datalog.txt",FILE_WRITE);
+  dataFile = SD.open ("FCtest.txt",FILE_WRITE);
   dataFile.println ("FC Voltage Raw (V), FC Voltage Calc (V), FC Vcurrent LO (V), FC Vcurrent HI (V), FC Current Calc (A), Thermocouple Calc (C), Rel Humidity Calc (%)");
   dataFile.close();
 }
@@ -38,7 +38,7 @@ void loop() {
     current = getCurrent ();
     temp = getTemp ();
     humidity = getHumidity ();
-    dataFile = SD.open ("datalog.txt", FILE_WRITE); 
+    dataFile = SD.open ("FCtest.txt", FILE_WRITE); 
     
     if (dataFile){ 
       dataFile.print (rawV);
@@ -66,7 +66,7 @@ void loop() {
       Serial.println (humidity);
   }
     else{
-      Serial.println ("error opening datalog.txt");
+      Serial.println ("error opening FCtest.txt");
   }
   delay (2000);
 }
