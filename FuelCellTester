@@ -57,7 +57,7 @@ void loop() {
       dataFile.close();
       
       Serial.print ("Voltage (V): ");
-      Serial.println (voltage);
+      Serial.println (finalV);
       Serial.print ("Current (A): ");
       Serial.println (current);
       Serial.print ("Thermocouple Calc (C): ");
@@ -74,8 +74,8 @@ void loop() {
 double getVoltage (){
   vcc = readVcc()/1000.0;
   rawV = analogRead (0);
-  voltage = ((rawV/1023.0)*35*vcc);
-  return voltage;  
+  finalV = ((rawV/1023.0)*35*vcc);
+  return finalV;  
 }
 
 double getCurrent (){
