@@ -3,59 +3,78 @@ Fuel Cell Test-- code for reading current and voltage
 */
 #include <SD.h>
 #include <File.h> 
+#include "Adafruit_MAX31855.h"
+#include "DHT.h"
 
+#define DHTPIN 2
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 const int chipSelect = 10; //CS pin
 File dataFile;
-double voltage;
-unsigned int ADCValue;
+double finalV;
+unsigned int rawV;
 long vcc;
 double current;
-double x2;
-double x1;
+double x2; //FC Vcurrent HI
+double x1; //FC Vcurrent LO
+int thermoDO = 3;
+int thermoCS = 4;
+int thermoCLK = 5;
+Adafruit_MAX31855 thermocouple(thermoCLK, thermoCS, thermoDO);
+double temp;
+float humidity;
 
 void setup() {
   Serial.begin (9600);
+  dht.begin();
   initializeSDCard();  
   dataFile = SD.open ("datalog.txt",FILE_WRITE);
-  dataFile.println ("ADC Value, Vcc, Voltage, A1 Reading, A2 Reading, Current");
+  dataFile.println ("FC Voltage Raw (V), FC Voltage Calc (V), FC Vcurrent LO (V), FC Vcurrent HI (V), FC Current Calc (A), Thermocouple Calc (C), Rel Humidity Calc (%)");
   dataFile.close();
 }
 
 void loop() {
-    voltage = getVoltage ();
+    finalV = getVoltage ();
     current = getCurrent ();
+    temp = getTemp ();
+    humidity = getHumidity ();
     dataFile = SD.open ("datalog.txt", FILE_WRITE); 
     
     if (dataFile){ 
-      dataFile.print (ADCValue);
+      dataFile.print (rawV);
       dataFile.print (", ");
-      dataFile.print (vcc);
-      dataFile.print (", ");
-      dataFile.print (voltage);
+      dataFile.print (finalV);
       dataFile.print (", ");
       dataFile.print (x1);
       dataFile.print (", ");
       dataFile.print (x2);
       dataFile.print (", ");
-      dataFile.println (current);
+      dataFile.print (current);
+      dataFile.print (", ");
+      dataFile.print (temp);
+      dataFile.print (", ");
+      dataFile.println ("humidity");
       dataFile.close();
-      Serial.print ("Voltage= ");
+      
+      Serial.print ("Voltage (V): ");
       Serial.println (voltage);
-      Serial.print ("Current= ");
+      Serial.print ("Current (A): ");
       Serial.println (current);
+      Serial.print ("Thermocouple Calc (C): ");
+      Serial.println (temp);
+      Serial.print ("Rel Humidity Calc (%): ");
+      Serial.println (humidity);
   }
     else{
       Serial.println ("error opening datalog.txt");
   }
-  delay (1000);
+  delay (2000);
 }
 
 double getVoltage (){
-  double r1; //input resistor value 
-  double r2; //input resistor value
   vcc = readVcc()/1000.0;
-  ADCValue = analogRead (0);
-  voltage = ((ADCValue/1023.0)*((r1+r2)/r2)*vcc);
+  rawV = analogRead (0);
+  voltage = ((rawV/1023.0)*35*vcc);
   return voltage;  
 }
 
@@ -67,6 +86,22 @@ double getCurrent (){
   v= (x2-x1)/1023.0;
   current = v/r;
   return current;
+}
+
+double getTemp (){
+double c = thermocouple.readCelsius();
+   if (isnan(c)) {
+     Serial.println("Something wrong with thermocouple!");
+   }
+     return c;
+}
+
+float getHumidity (){
+float h = dht.readHumidity();
+   if (isnan(h)) {
+     Serial.println("Failed to read from DHT sensor!");
+   }
+     return h;
 }
 
 long readVcc() {
