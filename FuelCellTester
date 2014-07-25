@@ -1,5 +1,5 @@
 /*
-Fuel Cell Test-- code for reading current and voltage
+Fuel Cell Test
 */
 #include <SD.h>
 #include <File.h> 
