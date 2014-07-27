@@ -5,6 +5,7 @@ Fuel Cell Test
 #include <File.h> 
 #include "Adafruit_MAX31855.h"
 #include "DHT.h"
+#include <Time.h>
 
 #define DHTPIN 2
 #define DHTTYPE DHT22
@@ -23,13 +24,14 @@ int thermoCLK = 5;
 Adafruit_MAX31855 thermocouple(thermoCLK, thermoCS, thermoDO);
 double temp;
 float humidity;
+time_t t = now();
 
 void setup() {
   Serial.begin (9600);
   dht.begin();
   initializeSDCard();  
   dataFile = SD.open ("FCtest.txt",FILE_WRITE);
-  dataFile.println ("FC Voltage Raw (V), FC Voltage Calc (V), FC Vcurrent LO (V), FC Vcurrent HI (V), FC Current Calc (A), Thermocouple Calc (C), Rel Humidity Calc (%)");
+  dataFile.println ("Time, FC Voltage Raw (V), FC Voltage Calc (V), FC Vcurrent LO (V), FC Vcurrent HI (V), FC Current Calc (A), Thermocouple Calc (C), Rel Humidity Calc (%)");
   dataFile.close();
 }
 
@@ -41,6 +43,9 @@ void loop() {
     dataFile = SD.open ("FCtest.txt", FILE_WRITE); 
     
     if (dataFile){ 
+      t = now();
+      dataFile.print (t);
+      dataFile.print (", ");
       dataFile.print (rawV);
       dataFile.print (", ");
       dataFile.print (finalV);
@@ -74,7 +79,8 @@ void loop() {
 double getVoltage (){
   vcc = readVcc()/1000.0;
   rawV = analogRead (0);
-  finalV = ((rawV/1023.0)*35*vcc);
+  finalV = rawV * .05;
+  //finalV = (((double)rawV/1023.0)*35.0*(double)vcc);
   return finalV;  
 }
 
